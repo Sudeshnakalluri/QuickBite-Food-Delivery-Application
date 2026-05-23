@@ -39,42 +39,43 @@ Icons         — Font Awesome 6
 
 proproject/
 │
-├── app.py                   # Main app — creates Flask app, seeds database
-├── extensions.py            # db, bcrypt, login_manager instances
-├── models.py                # All database models
-├── requirements.txt         # Python dependencies
+├── app.py              → Main app, creates Flask app, seeds database
+├── extensions.py       → db, bcrypt, login_manager instances
+├── models.py           → All database models
+├── requirements.txt    → Python dependencies
 │
 ├── routes/
-│   ├── auth.py              # Login, Register, Logout
-│   ├── customer.py          # Home, Menu, Cart, Checkout, Tracking, Reviews
-│   ├── restaurant.py        # Restaurant Dashboard, Menu Management
-│   ├── driver.py            # Driver Dashboard, Accept/Pickup/Deliver orders
-│   ├── admin.py             # Admin Panel — Users, Restaurants, Analytics
-│   └── api.py               # API endpoints for notifications & order status
+│   ├── auth.py         → Login, Register, Logout
+│   ├── customer.py     → Home, Menu, Cart, Checkout, Tracking, Reviews
+│   ├── restaurant.py   → Restaurant Dashboard, Menu Management
+│   ├── driver.py       → Driver Dashboard, Accept/Pickup/Deliver orders
+│   ├── admin.py        → Admin Panel — Users, Restaurants, Analytics
+│   └── api.py          → API endpoints for notifications & order status
 │
 └── templates/
-    ├── base.html            # Common navbar, footer, live notifications
+    ├── base.html        → Common navbar, footer, live notifications
     ├── auth/
-    │   ├── login.html       # Login page
-    │   └── register.html    # Register page
+    │   ├── login.html
+    │   └── register.html
     ├── customer/
-    │   ├── home.html        # Restaurant listing with search & filters
-    │   ├── menu.html        # Restaurant menu with recommendations & reviews
-    │   ├── cart.html        # Shopping cart
-    │   ├── checkout.html    # Checkout with address & payment
-    │   ├── tracking.html    # Live order tracking with map
-    │   ├── orders.html      # Order history
-    │   └── notifications.html # All notifications
+    │   ├── home.html        → Restaurant listing with search & filters
+    │   ├── menu.html        → Menu with recommendations & reviews
+    │   ├── cart.html        → Shopping cart
+    │   ├── checkout.html    → Checkout with address & payment
+    │   ├── tracking.html    → Live order tracking with map
+    │   ├── orders.html      → Order history
+    │   └── notifications.html
     ├── restaurant/
-    │   ├── dashboard.html   # Restaurant dashboard with orders
-    │   ├── menu.html        # Add/manage menu items
-    │   └── setup.html       # New restaurant setup
+    │   ├── dashboard.html   → Orders & revenue dashboard
+    │   ├── menu.html        → Add/manage menu items
+    │   └── setup.html       → New restaurant setup
     ├── driver/
-    │   └── dashboard.html   # Driver dashboard with available & active orders
+    │   └── dashboard.html   → Available & active orders
     └── admin/
-        ├── dashboard.html   # Admin overview with stats
-        ├── users.html       # All users list
-        └── restaurants.html # All restaurants with activate/deactivate
+        ├── dashboard.html   → Platform stats
+        ├── users.html       → All users
+        └── restaurants.html → Manage restaurants
+
 ---
 
 ## 👥 User Roles
