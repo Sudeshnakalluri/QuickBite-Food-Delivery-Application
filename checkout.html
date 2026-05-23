@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Checkout - QuickBite{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4">💳 Checkout</h3>
+<div class="row">
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">📍 Delivery Address</h5>
+                <form method="POST" id="checkoutForm">
+                    {% if saved_addresses %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Saved Addresses</label>
+                        <div class="row">
+                            {% for sa in saved_addresses %}
+                            <div class="col-12 mb-2">
+                                <div class="form-check border rounded p-2" style="cursor:pointer;" onclick="document.getElementById('addr').value='{{ sa.address }}'">
+                                    <input class="form-check-input" type="radio" name="saved_addr">
+                                    <label class="form-check-label small"><strong>{{ sa.label }}</strong> — {{ sa.address }}</label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <hr><p class="text-muted small">Or enter a new address:</p>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <textarea name="address" id="addr" class="form-control" rows="3" placeholder="Enter full delivery address..." required>{{ current_user.address or '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Special Instructions</label>
+                        <input type="text" name="instructions" class="form-control" placeholder="e.g. Leave at door, No spice...">
+                    </div>
+                    <h5 class="fw-bold mb-3">💳 Payment Method</h5>
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <div class="form-check border rounded p-3">
+                                <input class="form-check-input" type="radio" name="payment" value="Cash on Delivery" id="cod" checked>
+                                <label class="form-check-label fw-bold" for="cod">💵 Cash on Delivery</label>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="form-check border rounded p-3">
+                                <input class="form-check-input" type="radio" name="payment" value="UPI" id="upi">
+                                <label class="form-check-label fw-bold" for="upi">📱 UPI</label>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="form-check border rounded p-3">
+                                <input class="form-check-input" type="radio" name="payment" value="Credit/Debit Card" id="card">
+                                <label class="form-check-label fw-bold" for="card">💳 Card</label>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="form-check border rounded p-3">
+                                <input class="form-check-input" type="radio" name="payment" value="Net Banking" id="netbank">
+                                <label class="form-check-label fw-bold" for="netbank">🏦 Net Banking</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 btn-lg mt-3">🎉 Place Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="fw-bold">📋 Order Summary</h5>
+                {% for ci in cart_items %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ ci.item.name }} x{{ ci.qty }}</span>
+                    <span>₹{{ ci.subtotal }}</span>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="d-flex justify-content-between mb-1"><span>Subtotal</span><span>₹{{ total }}</span></div>
+                <div class="d-flex justify-content-between mb-1 text-success"><span>Delivery</span><span>FREE</span></div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold fs-5">
+                    <span>Total</span><span style="color:var(--primary);">₹{{ total }}</span>
+                </div>
+                <div class="mt-3 p-2 rounded" style="background:#fff3ee;font-size:13px;">
+                    🛵 Estimated delivery: <strong>30 mins</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

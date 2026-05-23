@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Manage Menu{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4">🍽️ Manage Menu</h3>
+<div class="row">
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="fw-bold">Add New Item</h5>
+                <form method="POST" action="{{ url_for('restaurant.add_item') }}">
+                    <div class="mb-2"><label class="form-label">Item Name</label>
+                        <input type="text" name="name" class="form-control" required></div>
+                    <div class="mb-2"><label class="form-label">Description</label>
+                        <input type="text" name="description" class="form-control"></div>
+                    <div class="mb-2"><label class="form-label">Price (₹)</label>
+                        <input type="number" name="price" class="form-control" step="0.01" required></div>
+                    <div class="mb-2"><label class="form-label">Category</label>
+                        <input type="text" name="category" class="form-control" placeholder="e.g. Pizza, Drinks, Sides" required></div>
+                    <div class="mb-2"><label class="form-label">Emoji</label>
+                        <select name="emoji" class="form-select">
+                            <option>🍕</option><option>🍔</option><option>🍛</option><option>🍜</option>
+                            <option>🍟</option><option>🥗</option><option>🥤</option><option>🍰</option>
+                            <option>🥖</option><option>🍣</option><option>🍝</option><option>🫕</option>
+                        </select></div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="recommended" class="form-check-input" id="rec">
+                        <label class="form-check-label" for="rec">⭐ Mark as Recommended</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Add Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">Menu Items ({{ items|length }})</h5>
+                {% for item in items %}
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <strong>{{ item.emoji }} {{ item.name }}</strong>
+                        {% if item.is_recommended %}<span class="badge ms-1" style="background:#fff3ee;color:var(--primary);">⭐ Recommended</span>{% endif %}
+                        <span class="badge ms-1 {% if item.is_available %}bg-success{% else %}bg-danger{% endif %}">{% if item.is_available %}Available{% else %}Unavailable{% endif %}</span>
+                        <p class="text-muted small mb-0">{{ item.category }} • {{ item.description }}</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold" style="color:var(--primary);">₹{{ item.price }}</span>
+                        <a href="{{ url_for('restaurant.toggle_item', item_id=item.id) }}" class="btn btn-sm btn-outline-{% if item.is_available %}danger{% else %}success{% endif %}">
+                            {% if item.is_available %}Hide{% else %}Show{% endif %}
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">No menu items yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

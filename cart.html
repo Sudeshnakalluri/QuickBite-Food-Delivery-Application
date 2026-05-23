@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Your Cart - QuickBite{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4">🛒 Your Cart</h3>
+{% if cart_items %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                {% if restaurant %}
+                <p class="text-muted mb-3"><i class="fas fa-store"></i> Ordering from: <strong>{{ restaurant.name }}</strong></p>
+                {% endif %}
+                {% for ci in cart_items %}
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                    <div>
+                        <h6 class="mb-0 fw-bold">{{ ci.item.name }}</h6>
+                        <small class="text-muted">₹{{ ci.item.price }} each</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge" style="background:#fff3ee;color:var(--primary);font-size:14px;">x{{ ci.qty }}</span>
+                        <span class="fw-bold">₹{{ ci.subtotal }}</span>
+                        <a href="{{ url_for('customer.remove_from_cart', item_id=ci.item.id) }}" class="btn btn-sm btn-outline-danger">✕</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="fw-bold">Order Summary</h5>
+                <div class="d-flex justify-content-between mb-2"><span>Subtotal</span><span>₹{{ total }}</span></div>
+                <div class="d-flex justify-content-between mb-2"><span>Delivery Fee</span><span class="text-success">FREE</span></div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span style="color:var(--primary);">₹{{ total }}</span></div>
+                <a href="{{ url_for('customer.checkout') }}" class="btn btn-primary w-100 btn-lg mt-3">Proceed to Checkout →</a>
+                <a href="{{ url_for('customer.home') }}" class="btn btn-outline-secondary w-100 mt-2">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <div style="font-size:80px;">🛒</div>
+    <h4 class="text-muted mt-3">Your cart is empty!</h4>
+    <a href="{{ url_for('customer.home') }}" class="btn btn-primary mt-3">Browse Restaurants</a>
+</div>
+{% endif %}
+{% endblock %}

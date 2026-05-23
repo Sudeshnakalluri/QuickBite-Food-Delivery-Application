@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}QuickBite 🍕{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary:#FF6B35; --dark:#1a1a2e; --light-bg:#FFF8F5; }
+        body { background:var(--light-bg); font-family:'Segoe UI',sans-serif; }
+        .navbar { background:var(--dark) !important; }
+        .navbar-brand { color:var(--primary) !important; font-size:1.5rem; font-weight:800; }
+        .btn-primary { background:var(--primary); border-color:var(--primary); }
+        .btn-primary:hover { background:#e55a2b; border-color:#e55a2b; }
+        .card { border:none; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.08); transition:transform 0.2s; }
+        .card:hover { transform:translateY(-4px); }
+        .text-primary { color:var(--primary) !important; }
+        .notif-badge { position:absolute; top:-6px; right:-6px; background:#dc3545; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; }
+
+        /* Live notification toast */
+        #toast-container { position:fixed; top:80px; right:20px; z-index:9999; width:320px; }
+        .live-toast { background:white; border-radius:12px; padding:14px 16px; margin-bottom:10px;
+                      box-shadow:0 4px 20px rgba(0,0,0,0.15); border-left:4px solid var(--primary);
+                      animation:slideIn 0.3s ease; display:flex; justify-content:space-between; align-items:start; }
+        .live-toast.driver-toast { border-left-color:#28a745; }
+        @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+        .toast-close { cursor:pointer; color:#aaa; font-size:18px; line-height:1; margin-left:10px; }
+        .toast-close:hover { color:#333; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('customer.home') }}">🍕 QuickBite</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('customer.home') }}"><i class="fas fa-home"></i> Home</a></li>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'customer' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('customer.my_orders') }}"><i class="fas fa-receipt"></i> My Orders</a></li>
+                    {% elif current_user.role == 'restaurant' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('restaurant.dashboard') }}"><i class="fas fa-store"></i> Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('restaurant.menu') }}"><i class="fas fa-utensils"></i> Menu</a></li>
+                    {% elif current_user.role == 'driver' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('driver.dashboard') }}"><i class="fas fa-motorcycle"></i> My Deliveries</a></li>
+                    {% elif current_user.role == 'admin' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-chart-bar"></i> Admin</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                <li class="nav-item position-relative me-3">
+                    <a class="nav-link" href="{{ url_for('customer.view_cart') }}">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                        {% set cart = session.get('cart', {}) %}
+                        {% if cart.get('items') %}<span class="notif-badge">{{ cart['items']|length }}</span>{% endif %}
+                    </a>
+                </li>
+                <li class="nav-item position-relative me-2">
+                    <a class="nav-link" href="{{ url_for('customer.notifications') }}">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-badge" id="bellBadge" style="display:none;">!</span>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i> {{ current_user.name }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text text-muted small">{{ current_user.role|upper }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+                <li class="nav-item"><a class="nav-link btn btn-sm ms-2" style="background:var(--primary);color:white;border-radius:8px;padding:6px 16px;" href="{{ url_for('auth.register') }}">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Toast Container for Live Notifications -->
+<div id="toast-container"></div>
+
+<div class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}{% endif %}{% endwith %}
+    {% block content %}{% endblock %}
+</div>
+
+<footer class="mt-5 py-4 text-center" style="background:#1a1a2e;">
+    <p class="mb-0" style="color:#aaa;">🍕 QuickBite — Food Delivery App | Built with Flask + Python</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% if current_user.is_authenticated %}
+<script>
+const userRole = "{{ current_user.role }}";
+const seenIds = new Set();
+
+function showToast(message, isDriver) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'live-toast' + (isDriver ? ' driver-toast' : '');
+    toast.innerHTML = `
+        <span>${message}</span>
+        <span class="toast-close" onclick="this.parentElement.remove()">✕</span>
+    `;
+    container.appendChild(toast);
+    // Auto remove after 8 seconds
+    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 8000);
+}
+
+function checkNotifications() {
+    fetch('/api/notifications/unread')
+        .then(r => r.json())
+        .then(notifs => {
+            if (notifs.length > 0) {
+                document.getElementById('bellBadge').style.display = 'flex';
+            }
+            notifs.forEach(n => {
+                if (!seenIds.has(n.id)) {
+                    seenIds.add(n.id);
+                    showToast(n.message, userRole === 'driver');
+                    // Mark as read after showing
+                    fetch(`/api/notifications/${n.id}/read`, {method:'POST'});
+                }
+            });
+        })
+        .catch(() => {}); // Silently fail if error
+}
+
+// Check every 5 seconds for drivers, 10 seconds for others
+const interval = userRole === 'driver' ? 5000 : 10000;
+checkNotifications(); // Check immediately on page load
+setInterval(checkNotifications, interval);
+</script>
+{% endif %}
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

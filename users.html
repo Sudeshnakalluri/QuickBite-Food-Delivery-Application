@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4">👥 All Users</h3>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead style="background:#f8f9fa;">
+                <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge" style="background:{% if user.role=='admin' %}#dc3545{% elif user.role=='restaurant' %}var(--primary){% else %}#28a745{% endif %};">{{ user.role }}</span></td>
+                    <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

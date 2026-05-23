@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Setup Restaurant{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h4 class="fw-bold mb-4">🍕 Setup Your Restaurant</h4>
+            <form method="POST" action="{{ url_for('restaurant.setup') }}">
+                <div class="mb-3"><label class="form-label fw-bold">Restaurant Name</label>
+                    <input type="text" name="name" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label fw-bold">Cuisine Type</label>
+                    <select name="cuisine" class="form-select">
+                        <option>Italian</option><option>Indian</option><option>American</option>
+                        <option>Chinese</option><option>Mexican</option><option>Other</option>
+                    </select></div>
+                <div class="mb-3"><label class="form-label fw-bold">Address</label>
+                    <input type="text" name="address" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label fw-bold">Delivery Time (minutes)</label>
+                    <input type="number" name="delivery_time" class="form-control" value="30"></div>
+                <button type="submit" class="btn btn-primary w-100 btn-lg">Create Restaurant →</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

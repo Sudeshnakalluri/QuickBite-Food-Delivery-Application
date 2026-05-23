@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}Track Order #{{ order.id }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+#map { height:300px; border-radius:12px; }
+.step-done { background:var(--primary) !important; color:white; }
+.step-current { background:#ffa500 !important; color:white; animation:pulse 1.2s infinite; }
+.step-waiting { background:#6c757d !important; color:white; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+</style>
+{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4">📦 Track Order #{{ order.id }}</h3>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-4">
+                    <div>
+                        <h5 class="fw-bold">{{ order.restaurant.name }}</h5>
+                        <p class="text-muted mb-0">Ordered {{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+                    </div>
+                    <span class="badge fs-6" style="background:{% if order.status == 'Waiting for Driver' %}#6c757d{% elif order.status == 'Delivered' %}#28a745{% else %}var(--primary){% endif %};">
+                        {{ order.status }}
+                    </span>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="d-flex justify-content-between position-relative mb-5">
+                    <div style="position:absolute;top:18px;left:5%;right:5%;height:4px;background:#eee;z-index:0;">
+                        <div style="height:100%;background:var(--primary);width:{{ (current_step / (statuses|length - 1)) * 100 }}%;transition:width 0.8s;"></div>
+                    </div>
+                    {% for status in statuses %}
+                    <div class="text-center" style="z-index:1;width:20%;">
+                        <div class="mx-auto {% if loop.index0 < current_step %}step-done{% elif loop.index0 == current_step %}step-current{% else %}step-waiting{% endif %}"
+                             style="width:38px;height:38px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;">
+                            {% if loop.index0 < current_step %}✓
+                            {% elif loop.index0 == current_step %}●
+                            {% else %}{{ loop.index }}{% endif %}
+                        </div>
+                        <small class="d-block mt-2" style="font-size:10px;{% if loop.index0 == current_step %}color:var(--primary);font-weight:bold;{% endif %}">
+                            {% if status == 'Waiting for Driver' %}⏳
+                            {% elif status == 'Confirmed' %}✅
+                            {% elif status == 'Preparing' %}👨‍🍳
+                            {% elif status == 'Out for Delivery' %}🛵
+                            {% else %}🎉{% endif %}
+                            {{ status }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Status Message Box -->
+                {% if order.status == 'Waiting for Driver' %}
+                <div class="alert text-center" style="background:#fff3cd;border-left:4px solid #ffc107;">
+                    <div style="font-size:40px;">⏳</div>
+                    <h5 class="fw-bold mt-2">Waiting for a Driver...</h5>
+                    <p class="mb-0 text-muted">All nearby drivers have been notified. One will accept your order shortly!</p>
+                </div>
+
+                {% elif order.status == 'Delivered' %}
+                <div class="alert alert-success text-center">
+                    <h5>🎉 Order Delivered!</h5>
+                    <p class="mb-0">Enjoy your meal!</p>
+                </div>
+
+                {% else %}
+                <div class="alert mb-3" style="background:#fff3ee;border-left:4px solid var(--primary);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>⏱️ Estimated Arrival</strong><br>
+                            <span id="etaText" class="fs-5 fw-bold" style="color:var(--primary);">{{ order.eta_minutes }} minutes</span>
+                        </div>
+                        {% if order.driver %}
+                        <div class="text-end">
+                            <strong>🛵 Your Driver</strong><br>
+                            {{ order.driver.name }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if order.driver and order.status == 'Out for Delivery' %}
+                <h6 class="fw-bold mb-2">🗺️ Live Driver Location</h6>
+                <div id="map" class="mb-3"></div>
+                {% endif %}
+                {% endif %}
+
+            </div>
+        </div>
+
+        <!-- Review Section -->
+        {% if order.status == 'Delivered' and not order.review %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="fw-bold">⭐ Rate Your Experience</h5>
+                <form method="POST" action="{{ url_for('customer.submit_review', order_id=order.id) }}">
+                    <div class="mb-3">
+                        <div class="d-flex gap-3">
+                            {% for i in range(1,6) %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="rating" value="{{ i }}" id="r{{ i }}" {% if i==5 %}checked{% endif %}>
+                                <label class="form-check-label fs-5" for="r{{ i }}">{{ '⭐' * i }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <textarea name="comment" class="form-control" rows="2" placeholder="Write your review..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </form>
+            </div>
+        </div>
+        {% elif order.review %}
+        <div class="alert alert-success">✅ Your review: {{ '⭐' * order.review.rating }} — "{{ order.review.comment }}"</div>
+        {% endif %}
+
+        <!-- Order Items -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">🧾 Order Items</h6>
+                {% for oi in order.items %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ oi.menu_item.name }} x{{ oi.quantity }}</span>
+                    <span>₹{{ oi.price * oi.quantity }}</span>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total</span><span style="color:var(--primary);">₹{{ order.total_amount }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="fw-bold">📋 Delivery Info</h6>
+                <p class="small"><i class="fas fa-map-marker-alt text-danger"></i> {{ order.delivery_address }}</p>
+                <p class="small"><i class="fas fa-credit-card" style="color:var(--primary);"></i> {{ order.payment_method }}</p>
+                {% if order.special_instructions %}
+                <p class="small"><i class="fas fa-sticky-note text-warning"></i> {{ order.special_instructions }}</p>
+                {% endif %}
+                {% if order.driver %}
+                <hr>
+                <p class="small"><i class="fas fa-user" style="color:var(--primary);"></i> Driver: <strong>{{ order.driver.name }}</strong></p>
+                {% endif %}
+                <hr>
+                <a href="{{ url_for('customer.my_orders') }}" class="btn btn-outline-secondary w-100">All Orders</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const orderId = {{ order.id }};
+const orderStatus = "{{ order.status }}";
+
+{% if order.driver and order.status == 'Out for Delivery' %}
+const map = L.map('map').setView([{{ order.driver.driver_lat }}, {{ order.driver.driver_lng }}], 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+const driverIcon = L.divIcon({ html:'<div style="font-size:28px;">🛵</div>', iconSize:[30,30] });
+let driverMarker = L.marker([{{ order.driver.driver_lat }}, {{ order.driver.driver_lng }}], {icon: driverIcon})
+    .addTo(map).bindPopup('Driver: {{ order.driver.name }}');
+{% endif %}
+
+// Auto-refresh every 10 seconds to update status
+if (orderStatus !== 'Delivered') {
+    setInterval(() => {
+        fetch(`/customer/api/order/${orderId}/status`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.status !== orderStatus) {
+                    location.reload(); // Reload if status changed
+                }
+                {% if order.driver and order.status == 'Out for Delivery' %}
+                if (data.driver) {
+                    driverMarker.setLatLng([data.driver.lat, data.driver.lng]);
+                    map.panTo([data.driver.lat, data.driver.lng]);
+                }
+                {% endif %}
+            });
+    }, 10000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}QuickBite - Order Food Online{% endblock %}
+{% block extra_css %}
+<style>
+.hero { background: linear-gradient(135deg, #1a1a2e, #16213e); color: white; padding: 60px 0; border-radius: 20px; margin-bottom: 40px; }
+.restaurant-card img { height: 180px; object-fit: cover; border-radius: 12px 12px 0 0; background: #f0f0f0; }
+.cuisine-badge { background: #fff3ee; color: var(--primary); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+.rating { color: #FFD700; }
+.filter-btn { border-radius: 20px; margin: 4px; border: 2px solid var(--primary); color: var(--primary); }
+.filter-btn.active, .filter-btn:hover { background: var(--primary); color: white; }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Hero -->
+<div class="hero text-center">
+    <h1 class="display-4 fw-bold">Hungry? 🍕</h1>
+    <p class="lead">Order from the best restaurants near you</p>
+    <div class="col-md-6 mx-auto mt-3">
+        <div class="input-group input-group-lg">
+            <input type="text" class="form-control" placeholder="Search restaurants or cuisines..." id="searchInput">
+            <button class="btn" style="background:var(--primary);color:white;"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- Cuisine Filters -->
+<div class="mb-4 text-center">
+    <button class="btn filter-btn active" onclick="filterCuisine('all', this)">🍽️ All</button>
+    <button class="btn filter-btn" onclick="filterCuisine('Italian', this)">🍕 Italian</button>
+    <button class="btn filter-btn" onclick="filterCuisine('American', this)">🍔 American</button>
+    <button class="btn filter-btn" onclick="filterCuisine('Indian', this)">🍛 Indian</button>
+</div>
+
+<!-- Restaurants Grid -->
+<div class="row" id="restaurantGrid">
+    {% for r in restaurants %}
+    <div class="col-md-4 mb-4 restaurant-item" data-cuisine="{{ r.cuisine }}">
+        <div class="card h-100">
+            <div style="height:180px;background:linear-gradient(135deg,#ff6b35,#ffa500);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;font-size:60px;">
+                {% if 'Pizza' in r.name %}🍕{% elif 'Burger' in r.name %}🍔{% elif 'Spice' in r.name or 'Garden' in r.name %}🍛{% else %}🍽️{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title fw-bold mb-1">{{ r.name }}</h5>
+                    <span class="cuisine-badge">{{ r.cuisine }}</span>
+                </div>
+                <div class="d-flex align-items-center my-2">
+                    <span class="rating">★</span>
+                    <span class="ms-1 fw-bold">{{ r.rating }}</span>
+                    <span class="text-muted ms-3"><i class="fas fa-clock"></i> {{ r.delivery_time }} mins</span>
+                </div>
+                <p class="text-muted small"><i class="fas fa-map-marker-alt"></i> {{ r.address }}</p>
+                <a href="{{ url_for('customer.restaurant_menu', restaurant_id=r.id) }}" class="btn btn-primary w-100">View Menu →</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <h4 class="text-muted">No restaurants available yet.</h4>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function filterCuisine(cuisine, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.restaurant-item').forEach(item => {
+        item.style.display = (cuisine === 'all' || item.dataset.cuisine === cuisine) ? 'block' : 'none';
+    });
+}
+document.getElementById('searchInput').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.restaurant-item').forEach(item => {
+        item.style.display = item.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Manage Restaurants{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4">🍕 All Restaurants</h3>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead style="background:#f8f9fa;">
+                <tr><th>#</th><th>Name</th><th>Cuisine</th><th>Rating</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for r in restaurants %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td>{{ r.name }}</td>
+                    <td>{{ r.cuisine }}</td>
+                    <td>⭐ {{ r.rating }}</td>
+                    <td><span class="badge" style="background:{% if r.is_active %}#28a745{% else %}#dc3545{% endif %};">{% if r.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                    <td><a href="{{ url_for('admin.toggle_restaurant', r_id=r.id) }}" class="btn btn-sm btn-outline-{% if r.is_active %}danger{% else %}success{% endif %}">{% if r.is_active %}Deactivate{% else %}Activate{% endif %}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
